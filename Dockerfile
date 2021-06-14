@@ -1,4 +1,5 @@
 # syntax = docker/dockerfile:1.0-experimental
+
 FROM openjdk:8-buster as builder
 
 ARG NODE_VERSION=10
@@ -14,7 +15,8 @@ RUN apt-get install -y lsb-release \
     && echo "deb-src https://deb.nodesource.com/node_$NODE_VERSION.x $DISTRO main" >> /etc/apt/sources.list.d/nodesource.list \
     && curl -sSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add - \
     && apt-get update \
-    && apt-get install -y nodejs
+    && apt-get install -y nodejs \
+    && apt-get install python-minimal
 
 COPY . /smui
 WORKDIR /smui
@@ -42,11 +44,16 @@ EXPOSE $SMUI_CONF_HTTP_PORT
 RUN addgroup --gid 1024 smui \
     && adduser --uid 1024 --ingroup smui smui --disabled-password --quiet
 
+RUN usermod -aG sudo smui
+
+RUN mkdir -p /smui/liveCore/conf/rules
+RUN mkdir -p /smui/preliveCore/conf/rules
+
 WORKDIR /smui
 
 RUN mkdir /tmp/smui-git-repo /home/smui/.ssh \
-    && chown -R smui:smui /smui /tmp/smui-git-repo /home/smui/.ssh
-
+    && chown -R smui:smui /smui /tmp/smui-git-repo /home/smui/.ssh \
+    && chown -R smui:smui /smui/preliveCore/conf/rules /smui/liveCore/conf/rules
 USER smui
 
 COPY --chown=smui:smui conf/logback.xml .

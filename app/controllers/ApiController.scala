@@ -402,6 +402,32 @@ class ApiController @Inject()(authActionFactory: AuthActionFactory,
   // TODO consider outsourcing this "business logic" into the (config) model
   def getLatestVersionInfo() = authActionFactory.getAuthenticatedAction(Action).async {
     Future {
+
+      val current = SmuiVersion.parse(models.buildInfo.BuildInfo.version)
+
+      val versionInfo = {
+
+        def renderVersionOption(o: Option[SmuiVersion]) = o match {
+          case None => None
+          case Some(version) => Some(s"$version")
+        }
+
+        SmuiVersionInfo(
+          None,
+          renderVersionOption(current),
+          SmuiVersionInfoType.ERROR.toString,
+          ""
+        )
+      }
+      
+
+      Ok(Json.toJson(versionInfo))
+    }
+  }
+
+
+  def getLatestVersionInfo_old() = authActionFactory.getAuthenticatedAction(Action).async {
+    Future {
       // get latest version from dockerhub
       val latestFromDockerHub = SmuiVersion.latestVersionFromDockerHub()
       val current = SmuiVersion.parse(models.buildInfo.BuildInfo.version)
